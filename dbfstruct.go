@@ -67,8 +67,8 @@ func (dt *DbfTable) Create(spec interface{}) error {
 	for i := 0; i < s.NumField(); i++ {
 		var sz uint8 = 50 // text fields default to 50 unless specified
 		f := s.Field(i)
-		if typeOfSpec.Field(i).PkgPath != "" {
-			continue // hidden field
+		if typeOfSpec.Field(i).PkgPath != "" || typeOfSpec.Field(i).Anonymous {
+			continue // ignore unexported or embedded fields
 		}
 		fieldName := typeOfSpec.Field(i).Name
 		alt := typeOfSpec.Field(i).Tag.Get("dbf")
@@ -127,9 +127,10 @@ func (dt *DbfTable) Write(row int, spec interface{}) int {
 	typeOfSpec := s.Type()
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
-		if typeOfSpec.Field(i).PkgPath != "" {
-			continue
+		if typeOfSpec.Field(i).PkgPath != "" || typeOfSpec.Field(i).Anonymous {
+			continue // ignore unexported or embedded fields
 		}
+
 		alt := typeOfSpec.Field(i).Tag.Get("dbf")
 		// ignore '-' tags
 		if alt == "-" {
